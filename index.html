@@ -19,6 +19,8 @@
             --danger-dark: #c0392b;
             --warning: #f39c12;
             --warning-dark: #d35400;
+            --info: #17a2b8;
+            --info-dark: #138496;
             --light: #f8f9fa;
             --dark: #343a40;
             --gray: #6c757d;
@@ -204,6 +206,15 @@
             background-color: var(--danger-dark);
         }
         
+        .btn-info {
+            background-color: var(--info);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: var(--info-dark);
+        }
+        
         .btn-sm {
             padding: 5px 10px;
             font-size: 0.8rem;
@@ -251,6 +262,11 @@
         .badge-danger {
             background-color: #f8d7da;
             color: #721c24;
+        }
+        
+        .badge-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
         }
         
         .form-group {
@@ -421,6 +437,10 @@
         
         .card-profit .card-icon {
             background-color: var(--danger);
+        }
+        
+        .card-expenses .card-icon {
+            background-color: var(--info);
         }
         
         .search-filter {
@@ -614,6 +634,37 @@
             background-color: var(--danger);
         }
         
+        .card-expenses .card-progress-bar {
+            background-color: var(--info);
+        }
+        
+        .expense-breakdown {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+        
+        .expense-label {
+            font-weight: 500;
+        }
+        
+        .expense-value {
+            font-weight: bold;
+        }
+        
         @media (max-width: 992px) {
             .dashboard-cards {
                 grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -740,6 +791,10 @@
                         <div class="stat-label">Total Purchases</div>
                     </div>
                     <div class="stat-box">
+                        <div class="stat-value" id="totalExpenses">PKR 0</div>
+                        <div class="stat-label">Total Expenses</div>
+                    </div>
+                    <div class="stat-box">
                         <div class="stat-value" id="netProfit">PKR 0</div>
                         <div class="stat-label">Net Profit</div>
                     </div>
@@ -804,6 +859,20 @@
                         <div class="card-progress-bar" id="inventoryProgress" style="width: 0%"></div>
                     </div>
                 </div>
+                <div class="card card-expenses">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-value" id="dashboardExpenses">PKR 0</div>
+                            <div class="card-label">Total Expenses</div>
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                    <div class="card-progress">
+                        <div class="card-progress-bar" id="expensesProgress" style="width: 0%"></div>
+                    </div>
+                </div>
                 <div class="card card-profit">
                     <div class="card-header">
                         <div>
@@ -820,6 +889,24 @@
                 </div>
             </div>
             
+            <div class="expense-breakdown">
+                <div class="section-title">
+                    <h2>Expense Breakdown</h2>
+                </div>
+                <div class="expense-item">
+                    <div class="expense-label">Delivery Expenses</div>
+                    <div class="expense-value" id="deliveryExpenses">PKR 0</div>
+                </div>
+                <div class="expense-item">
+                    <div class="expense-label">Local Expenses</div>
+                    <div class="expense-value" id="localExpenses">PKR 0</div>
+                </div>
+                <div class="expense-item">
+                    <div class="expense-label">Other Expenses</div>
+                    <div class="expense-value" id="otherExpenses">PKR 0</div>
+                </div>
+            </div>
+            
             <div class="chart-container">
                 <div class="section-title">
                     <h2>Sales & Purchase Trends</h2>
@@ -831,6 +918,9 @@
                 <h2>Recent Transactions</h2>
                 <div>
                     <button class="btn btn-primary" id="viewAllBtn">View All</button>
+                    <button class="btn btn-info" id="refreshDashboardBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
                 </div>
             </div>
             
@@ -1045,6 +1135,10 @@
                             <label for="currentStock">Current Stock</label>
                             <input type="number" id="currentStock" required>
                         </div>
+                    <div class="form-group">
+                            <label for="minStock">Minimum Stock</label>
+                            <input type="number" id="minStock" value="5">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="productDescription">Description</label>
@@ -1107,6 +1201,16 @@
                         <label for="saleDescription">Description</label>
                         <textarea id="saleDescription" rows="2"></textarea>
                     </div>
+                    <div class="form-group">
+                        <div class="expense-item">
+                            <div class="expense-label">Total Amount:</div>
+                            <div class="expense-value" id="saleTotalAmount">PKR 0</div>
+                        </div>
+                        <div class="expense-item">
+                            <div class="expense-label">Net Amount (After Expenses):</div>
+                            <div class="expense-value" id="saleNetAmount">PKR 0</div>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -1152,6 +1256,12 @@
                         <label for="purchaseDescription">Description</label>
                         <textarea id="purchaseDescription" rows="2"></textarea>
                     </div>
+                    <div class="form-group">
+                        <div class="expense-item">
+                            <div class="expense-label">Total Amount:</div>
+                            <div class="expense-value" id="purchaseTotalAmount">PKR 0</div>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -1196,6 +1306,18 @@
             // Update UI
             updateDashboard();
             initializeCharts();
+            
+            // Set up auto-reload
+            setupAutoReload();
+        }
+        
+        // Set up auto-reload every 30 seconds
+        function setupAutoReload() {
+            setInterval(async () => {
+                await loadAllData();
+                updateDashboard();
+                showNotification('Data refreshed automatically', 'success');
+            }, 30000); // 30 seconds
         }
         
         // Test Supabase connection
@@ -1349,7 +1471,6 @@
                 
                 // Auto-reload data
                 await loadProducts();
-                await loadSales(); // In case we need to update related data
                 
                 return true;
             } catch (error) {
@@ -1599,7 +1720,7 @@
             `;
             
             products.forEach(product => {
-                const stockStatus = getStockStatus(product.current_stock);
+                const stockStatus = getStockStatus(product.current_stock, product.min_stock);
                 const statusBadge = `<span class="badge badge-${stockStatus.class}">${stockStatus.text}</span>`;
                 const description = product.description ? `<div class="description-cell" title="${product.description}">${product.description}</div>` : '-';
                 
@@ -1673,6 +1794,8 @@
                             <th>Quantity</th>
                             <th>Unit Price</th>
                             <th>Total Amount</th>
+                            <th>Expenses</th>
+                            <th>Net Amount</th>
                             <th>Description</th>
                             <th>Actions</th>
                         </tr>
@@ -1683,6 +1806,8 @@
             sales.forEach(sale => {
                 const productName = sale.products ? sale.products.name : 'Unknown Product';
                 const description = sale.description ? `<div class="description-cell" title="${sale.description}">${sale.description}</div>` : '-';
+                const totalExpenses = (sale.delivery_expense || 0) + (sale.local_expense || 0);
+                const netAmount = sale.total_amount - totalExpenses;
                 
                 html += `
                     <tr>
@@ -1693,6 +1818,8 @@
                         <td>${sale.quantity}</td>
                         <td>PKR ${sale.unit_price}</td>
                         <td>PKR ${sale.total_amount}</td>
+                        <td>PKR ${totalExpenses}</td>
+                        <td>PKR ${netAmount}</td>
                         <td>${description}</td>
                         <td>
                             <div class="action-buttons">
@@ -1825,6 +1952,8 @@
                             <th>Customer/Supplier</th>
                             <th>Product</th>
                             <th>Amount</th>
+                            <th>Expenses</th>
+                            <th>Net Amount</th>
                             <th>Description</th>
                             <th>Status</th>
                         </tr>
@@ -1835,6 +1964,8 @@
             recentSales.forEach(sale => {
                 const productName = sale.products ? sale.products.name : 'Unknown Product';
                 const description = sale.description ? `<div class="description-cell" title="${sale.description}">${sale.description}</div>` : '-';
+                const totalExpenses = (sale.delivery_expense || 0) + (sale.local_expense || 0);
+                const netAmount = sale.total_amount - totalExpenses;
                 
                 html += `
                     <tr>
@@ -1843,6 +1974,8 @@
                         <td>${sale.customer_name}</td>
                         <td>${productName}</td>
                         <td>PKR ${sale.total_amount}</td>
+                        <td>PKR ${totalExpenses}</td>
+                        <td>PKR ${netAmount}</td>
                         <td>${description}</td>
                         <td><span class="badge badge-success">Completed</span></td>
                     </tr>
@@ -1861,6 +1994,8 @@
                         <td>${purchase.supplier_name}</td>
                         <td>${purchase.product_name}</td>
                         <td>PKR ${purchase.total_amount}</td>
+                        <td>-</td>
+                        <td>PKR ${purchase.total_amount}</td>
                         <td>${description}</td>
                         <td><span class="badge badge-success">Received</span></td>
                     </tr>
@@ -1877,21 +2012,34 @@
             const totalSales = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount), 0);
             const totalPurchases = purchases.reduce((sum, purchase) => sum + parseFloat(purchase.total_amount), 0);
             const totalProducts = products.length;
-            const netProfit = totalSales - totalPurchases;
+            
+            // Calculate expenses
+            const deliveryExpenses = sales.reduce((sum, sale) => sum + (parseFloat(sale.delivery_expense) || 0), 0);
+            const localExpenses = sales.reduce((sum, sale) => sum + (parseFloat(sale.local_expense) || 0), 0);
+            const totalExpenses = deliveryExpenses + localExpenses;
+            
+            const netProfit = totalSales - totalPurchases - totalExpenses;
             
             // Update header stats
             document.getElementById('totalSales').textContent = `PKR ${totalSales.toLocaleString()}`;
             document.getElementById('totalPurchases').textContent = `PKR ${totalPurchases.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `PKR ${totalExpenses.toLocaleString()}`;
             document.getElementById('netProfit').textContent = `PKR ${netProfit.toLocaleString()}`;
             
             // Update dashboard cards
             document.getElementById('dashboardSales').textContent = `PKR ${totalSales.toLocaleString()}`;
             document.getElementById('dashboardPurchases').textContent = `PKR ${totalPurchases.toLocaleString()}`;
             document.getElementById('dashboardProducts').textContent = totalProducts;
+            document.getElementById('dashboardExpenses').textContent = `PKR ${totalExpenses.toLocaleString()}`;
             document.getElementById('dashboardProfit').textContent = `PKR ${netProfit.toLocaleString()}`;
             
+            // Update expense breakdown
+            document.getElementById('deliveryExpenses').textContent = `PKR ${deliveryExpenses.toLocaleString()}`;
+            document.getElementById('localExpenses').textContent = `PKR ${localExpenses.toLocaleString()}`;
+            document.getElementById('otherExpenses').textContent = `PKR 0`; // For future expansion
+            
             // Update progress bars
-            updateProgressBars(totalSales, totalPurchases, totalProducts, netProfit);
+            updateProgressBars(totalSales, totalPurchases, totalProducts, totalExpenses, netProfit);
             
             // Update analytics cards
             const currentMonth = new Date().toISOString().slice(0, 7);
@@ -1905,7 +2053,7 @@
                 sum + (product.current_stock * product.purchase_price), 0);
             document.getElementById('analyticsInventory').textContent = `PKR ${inventoryValue.toLocaleString()}`;
             
-            const profitMargin = totalSales > 0 ? ((totalSales - totalPurchases) / totalSales * 100).toFixed(1) : 0;
+            const profitMargin = totalSales > 0 ? ((totalSales - totalPurchases - totalExpenses) / totalSales * 100).toFixed(1) : 0;
             document.getElementById('analyticsMargin').textContent = `${profitMargin}%`;
             
             // Update analytics progress bars
@@ -1913,16 +2061,18 @@
         }
         
         // Update progress bars for dashboard cards
-        function updateProgressBars(sales, purchases, products, profit) {
+        function updateProgressBars(sales, purchases, products, expenses, profit) {
             // Calculate percentages (these are arbitrary for visual effect)
             const salesPercent = Math.min(100, (sales / 10000) * 100);
             const purchasesPercent = Math.min(100, (purchases / 8000) * 100);
             const productsPercent = Math.min(100, (products / 50) * 100);
+            const expensesPercent = Math.min(100, (expenses / 2000) * 100);
             const profitPercent = profit > 0 ? Math.min(100, (profit / 5000) * 100) : 0;
             
             document.getElementById('salesProgress').style.width = `${salesPercent}%`;
             document.getElementById('purchasesProgress').style.width = `${purchasesPercent}%`;
             document.getElementById('inventoryProgress').style.width = `${productsPercent}%`;
+            document.getElementById('expensesProgress').style.width = `${expensesPercent}%`;
             document.getElementById('profitProgress').style.width = `${profitPercent}%`;
         }
         
@@ -1951,6 +2101,7 @@
             document.getElementById('purchasePrice').value = product.purchase_price;
             document.getElementById('sellingPrice').value = product.selling_price;
             document.getElementById('currentStock').value = product.current_stock;
+            document.getElementById('minStock').value = product.min_stock || 5;
             document.getElementById('productDescription').value = product.description || '';
             
             document.getElementById('productModal').style.display = 'flex';
@@ -1972,6 +2123,9 @@
             document.getElementById('localExpense').value = sale.local_expense || 0;
             document.getElementById('saleDescription').value = sale.description || '';
             
+            // Update calculated amounts
+            calculateSaleAmounts();
+            
             document.getElementById('saleModal').style.display = 'flex';
         }
         
@@ -1989,6 +2143,9 @@
             document.getElementById('purchaseUnitPrice').value = purchase.unit_price;
             document.getElementById('purchaseDescription').value = purchase.description || '';
             
+            // Update calculated amount
+            calculatePurchaseAmount();
+            
             document.getElementById('purchaseModal').style.display = 'flex';
         }
         
@@ -1998,8 +2155,8 @@
                 '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
         }
         
-        function getStockStatus(stock) {
-            if (stock > 10) return { class: 'success', text: 'In Stock' };
+        function getStockStatus(stock, minStock = 5) {
+            if (stock > minStock) return { class: 'success', text: 'In Stock' };
             if (stock > 0) return { class: 'warning', text: 'Low Stock' };
             return { class: 'danger', text: 'Out of Stock' };
         }
@@ -2026,6 +2183,31 @@
             }, 3000);
         }
         
+        // Calculate sale amounts
+        function calculateSaleAmounts() {
+            const quantity = parseInt(document.getElementById('saleQuantity').value) || 0;
+            const unitPrice = parseFloat(document.getElementById('saleUnitPrice').value) || 0;
+            const deliveryExpense = parseFloat(document.getElementById('deliveryExpense').value) || 0;
+            const localExpense = parseFloat(document.getElementById('localExpense').value) || 0;
+            
+            const totalAmount = quantity * unitPrice;
+            const totalExpenses = deliveryExpense + localExpense;
+            const netAmount = totalAmount - totalExpenses;
+            
+            document.getElementById('saleTotalAmount').textContent = `PKR ${totalAmount.toLocaleString()}`;
+            document.getElementById('saleNetAmount').textContent = `PKR ${netAmount.toLocaleString()}`;
+        }
+        
+        // Calculate purchase amount
+        function calculatePurchaseAmount() {
+            const quantity = parseInt(document.getElementById('purchaseQuantity').value) || 0;
+            const unitPrice = parseFloat(document.getElementById('purchaseUnitPrice').value) || 0;
+            
+            const totalAmount = quantity * unitPrice;
+            
+            document.getElementById('purchaseTotalAmount').textContent = `PKR ${totalAmount.toLocaleString()}`;
+        }
+        
         // Setup event listeners
         function setupEventListeners() {
             // Tab switching
@@ -2050,6 +2232,13 @@
                 document.querySelector('.tabs').classList.toggle('mobile-open');
             });
             
+            // Refresh dashboard button
+            document.getElementById('refreshDashboardBtn').addEventListener('click', async () => {
+                await loadAllData();
+                updateDashboard();
+                showNotification('Dashboard refreshed!', 'success');
+            });
+            
             // Modal handling
             document.getElementById('addProductBtn').addEventListener('click', () => {
                 document.getElementById('productModalTitle').textContent = 'Add New Product';
@@ -2064,6 +2253,10 @@
                 document.getElementById('saleForm').reset();
                 document.getElementById('saleId').value = '';
                 document.getElementById('saleDate').valueAsDate = new Date();
+                
+                // Reset calculated amounts
+                document.getElementById('saleTotalAmount').textContent = 'PKR 0';
+                document.getElementById('saleNetAmount').textContent = 'PKR 0';
             });
             
             document.getElementById('addPurchaseBtn').addEventListener('click', () => {
@@ -2072,6 +2265,9 @@
                 document.getElementById('purchaseForm').reset();
                 document.getElementById('purchaseId').value = '';
                 document.getElementById('purchaseDate').valueAsDate = new Date();
+                
+                // Reset calculated amount
+                document.getElementById('purchaseTotalAmount').textContent = 'PKR 0';
             });
             
             // Close modals
@@ -2105,6 +2301,7 @@
                     current_stock: parseInt(document.getElementById('currentStock').value),
                     purchase_price: parseFloat(document.getElementById('purchasePrice').value),
                     selling_price: parseFloat(document.getElementById('sellingPrice').value),
+                    min_stock: parseInt(document.getElementById('minStock').value) || 5,
                     description: document.getElementById('productDescription').value
                 };
                 
@@ -2174,24 +2371,14 @@
                 }
             });
             
-            // Auto-calculate total amount when quantity or unit price changes
-            document.getElementById('saleQuantity').addEventListener('input', calculateSaleTotal);
-            document.getElementById('saleUnitPrice').addEventListener('input', calculateSaleTotal);
+            // Auto-calculate amounts when inputs change
+            document.getElementById('saleQuantity').addEventListener('input', calculateSaleAmounts);
+            document.getElementById('saleUnitPrice').addEventListener('input', calculateSaleAmounts);
+            document.getElementById('deliveryExpense').addEventListener('input', calculateSaleAmounts);
+            document.getElementById('localExpense').addEventListener('input', calculateSaleAmounts);
             
-            document.getElementById('purchaseQuantity').addEventListener('input', calculatePurchaseTotal);
-            document.getElementById('purchaseUnitPrice').addEventListener('input', calculatePurchaseTotal);
-        }
-        
-        function calculateSaleTotal() {
-            const quantity = parseInt(document.getElementById('saleQuantity').value) || 0;
-            const unitPrice = parseFloat(document.getElementById('saleUnitPrice').value) || 0;
-            // The total will be calculated in the save function
-        }
-        
-        function calculatePurchaseTotal() {
-            const quantity = parseInt(document.getElementById('purchaseQuantity').value) || 0;
-            const unitPrice = parseFloat(document.getElementById('purchaseUnitPrice').value) || 0;
-            // The total will be calculated in the save function
+            document.getElementById('purchaseQuantity').addEventListener('input', calculatePurchaseAmount);
+            document.getElementById('purchaseUnitPrice').addEventListener('input', calculatePurchaseAmount);
         }
         
         // Initialize charts with actual data
