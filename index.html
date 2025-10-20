@@ -947,12 +947,7 @@
                     <i class="fas fa-search"></i>
                     <input type="text" id="productSearch" placeholder="Search products...">
                 </div>
-                <select class="filter-select" id="stockFilter">
-                    <option value="">All Stock Status</option>
-                    <option value="in-stock">In Stock</option>
-                    <option value="low-stock">Low Stock</option>
-                    <option value="out-of-stock">Out of Stock</option>
-                </select>
+                
             </div>
             
             <div class="table-container">
@@ -1120,6 +1115,7 @@
                         <label for="productName">Product Name</label>
                         <input type="text" id="productName" required>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label for="purchasePrice">Purchase Price (PKR)</label>
@@ -1134,10 +1130,6 @@
                         <div class="form-group">
                             <label for="currentStock">Current Stock</label>
                             <input type="number" id="currentStock" required>
-                        </div>
-                    <div class="form-group">
-                            <label for="minStock">Minimum Stock</label>
-                            <input type="number" id="minStock" value="5">
                         </div>
                     </div>
                     <div class="form-group">
@@ -1711,7 +1703,6 @@
                             <th>Current Stock</th>
                             <th>Purchase Price</th>
                             <th>Selling Price</th>
-                            <th>Stock Status</th>
                             <th>Description</th>
                             <th>Actions</th>
                         </tr>
@@ -1720,9 +1711,8 @@
             `;
             
             products.forEach(product => {
-                const stockStatus = getStockStatus(product.current_stock, product.min_stock);
-                const statusBadge = `<span class="badge badge-${stockStatus.class}">${stockStatus.text}</span>`;
                 const description = product.description ? `<div class="description-cell" title="${product.description}">${product.description}</div>` : '-';
+                const category = product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : '-';
                 
                 html += `
                     <tr>
@@ -1731,7 +1721,6 @@
                         <td>${product.current_stock}</td>
                         <td>PKR ${product.purchase_price}</td>
                         <td>PKR ${product.selling_price}</td>
-                        <td>${statusBadge}</td>
                         <td>${description}</td>
                         <td>
                             <div class="action-buttons">
@@ -2101,7 +2090,6 @@
             document.getElementById('purchasePrice').value = product.purchase_price;
             document.getElementById('sellingPrice').value = product.selling_price;
             document.getElementById('currentStock').value = product.current_stock;
-            document.getElementById('minStock').value = product.min_stock || 5;
             document.getElementById('productDescription').value = product.description || '';
             
             document.getElementById('productModal').style.display = 'flex';
@@ -2153,12 +2141,6 @@
         function showLoading(elementId) {
             document.getElementById(elementId).innerHTML = 
                 '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-        }
-        
-        function getStockStatus(stock, minStock = 5) {
-            if (stock > minStock) return { class: 'success', text: 'In Stock' };
-            if (stock > 0) return { class: 'warning', text: 'Low Stock' };
-            return { class: 'danger', text: 'Out of Stock' };
         }
         
         function updateProductDropdown() {
@@ -2301,7 +2283,6 @@
                     current_stock: parseInt(document.getElementById('currentStock').value),
                     purchase_price: parseFloat(document.getElementById('purchasePrice').value),
                     selling_price: parseFloat(document.getElementById('sellingPrice').value),
-                    min_stock: parseInt(document.getElementById('minStock').value) || 5,
                     description: document.getElementById('productDescription').value
                 };
                 
